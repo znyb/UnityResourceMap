@@ -170,26 +170,34 @@ namespace Assets.Editor.ResourceMap
             }
         }
 
-        Vector2 miniMapSize = new Vector2(400, 400);
-        float miniMapBorder = 25;
+        Vector2 miniMapSize = new Vector2(300, 300);
+        float miniMapBorder = 20;
         void DrawMiniMap()
         {
             if (!miniMap)
                 return;
             
-            GUI.Window(1, new Rect(scrollPos.x + position.width - miniMapSize.x - 10, scrollPos.y, miniMapSize.x, miniMapSize.y), DrawMiniMap, "MiniMap");
+            GUI.Window(1, new Rect(scrollPos.x + position.width - miniMapSize.x - 10, scrollPos.y + 10, miniMapSize.x, miniMapSize.y), DrawMiniMap, "MiniMap");
             GUI.BringWindowToFront(1);
         }
 
         void DrawMiniMap(int id)
         {
-            float size = nodeHeight / mapHeight * (miniMapSize.y - miniMapBorder * 2);
+            var miniSize = miniMapSize - Vector2.one * miniMapBorder * 2;
+            var mapSize = new Vector2(mapWidth > position.width ? mapWidth : position.width, mapHeight > position.height ? mapHeight : position.height);
+            var region = new Rect(scrollPos.x / mapSize.x * miniSize.x + miniMapBorder,
+                    scrollPos.y / mapSize.y * miniSize.y + miniMapBorder,
+                    position.width / mapSize.x * miniSize.x,
+                    position.height / mapSize.y * miniSize.y);
+            GUI.Box(region, "");
+
+            float size = nodeHeight / mapSize.y * miniSize.y;
             size = Mathf.Clamp(size, 3, 15);
             //Debug.Log(size);
             foreach (var pair in NodeDict)
             {
-                var rect = new Rect(pair.Value.Rect.x * (miniMapSize.x - miniMapBorder * 2) / mapWidth + miniMapBorder,
-                    pair.Value.Rect.y * (miniMapSize.y - miniMapBorder * 2) / mapHeight + miniMapBorder,
+                var rect = new Rect(pair.Value.Rect.x * miniSize.x / mapSize.x + miniMapBorder,
+                    pair.Value.Rect.y * miniSize.y / mapSize.y + miniMapBorder,
                     size, size);
                 if (pair.Value == currentNode)
                     GUI.DrawTexture(rect, currentDotImage);
@@ -200,17 +208,11 @@ namespace Assets.Editor.ResourceMap
 
             }
 
-            var region = new Rect(scrollPos.x * (miniMapSize.x - miniMapBorder * 2) / mapWidth + miniMapBorder,
-                    scrollPos.y * (miniMapSize.y - miniMapBorder * 2) / mapHeight + miniMapBorder,
-                    position.width * (miniMapSize.x - miniMapBorder * 2) / mapWidth,
-                    position.height * (miniMapSize.y - miniMapBorder * 2) / mapHeight);
-            GUI.Box(region, "");
-
             Event e = Event.current;
             if ((e.type == EventType.MouseDrag || e.type == EventType.MouseUp) && e.button == 0)
             {
-                scrollPos.x = Mathf.Min((e.mousePosition.x - miniMapBorder) * mapWidth / (miniMapSize.x - 2 * miniMapBorder) - position.width / 2, mapWidth - position.width);
-                scrollPos.y = Mathf.Min((e.mousePosition.y - miniMapBorder) * mapHeight / (miniMapSize.y - 2 * miniMapBorder) - position.height / 2, mapHeight - position.height);
+                scrollPos.x = Mathf.Min((e.mousePosition.x - miniMapBorder) * mapSize.x / miniSize.x - position.width / 2, mapSize.x - position.width);
+                scrollPos.y = Mathf.Min((e.mousePosition.y - miniMapBorder) * mapSize.y / miniSize.y - position.height / 2, mapSize.y - position.height);
                 //Debug.Log(e.mousePosition);
                 e.Use();
                 Repaint();
@@ -220,7 +222,7 @@ namespace Assets.Editor.ResourceMap
         void DrawMap()
         {
             var rect = new Rect(0, 0, mapWidth, mapHeight);
-            var view = new Rect(0, 20, Mathf.Min(mapWidth, position.width), Mathf.Min(mapHeight, position.height - 20));
+            var view = new Rect(0, 20, position.width, position.height - 20);
             scrollPos = GUI.BeginScrollView(view, scrollPos, rect, GUIStyle.none, GUIStyle.none);
 
             view.position = scrollPos;
