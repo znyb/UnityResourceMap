@@ -3,6 +3,7 @@ using UnityEditor;
 using UnityEngine;
 using System.Linq;
 using System;
+using System.IO;
 
 namespace Assets.Editor.ResourceMap
 {
@@ -80,12 +81,16 @@ namespace Assets.Editor.ResourceMap
 
         public void OnEnable()
         {
+            var script = MonoScript.FromScriptableObject(this);
+            string path = AssetDatabase.GetAssetPath(script);
+            var dir = Path.GetDirectoryName(path);
+
             parentDotImage = EditorGUIUtility.Load("redLight") as Texture2D;
             currentDotImage = EditorGUIUtility.Load("greenLight") as Texture2D;
             childrenDotImage = EditorGUIUtility.Load("orangeLight") as Texture2D;
 
-            parentArrow = EditorGUIUtility.Load("vcs_change") as Texture2D;
-            childrenArrow = EditorGUIUtility.Load("vcs_incoming") as Texture2D;
+            parentArrow = AssetDatabase.LoadAssetAtPath<Texture2D>(Path.Combine(dir , "Icon/parentArrow.png"));
+            childrenArrow = AssetDatabase.LoadAssetAtPath<Texture2D>(Path.Combine(dir, "Icon/childrenArrow.png"));
 
             titleContent = new GUIContent("ResourceMap", EditorGUIUtility.Load("BlendTree Icon") as Texture2D);
 
@@ -142,6 +147,14 @@ namespace Assets.Editor.ResourceMap
                 if (GUILayout.Button("Load All", EditorStyles.toolbarButton, GUILayout.Width(100)))
                 {
                     Map.DependencyInfo.Load(); 
+                    CreateNode();
+                }
+
+                GUILayout.Space(4);
+
+                if (GUILayout.Button("Clear", EditorStyles.toolbarButton, GUILayout.Width(100)))
+                {
+                    Map.DependencyInfo.Clear();
                     CreateNode();
                 }
 
@@ -248,7 +261,7 @@ namespace Assets.Editor.ResourceMap
 
         List<int> parentLines = new List<int>();
         List<int> childrenLines = new List<int>();
-        Vector2 arrowSize = new Vector2(15, 20);
+        Vector2 arrowSize = new Vector2(16, 12);
 
         void DrawParentLine(MapNode node, Rect view)
         {
@@ -265,12 +278,11 @@ namespace Assets.Editor.ResourceMap
                 DrawParentLine(n, view);
                 if (draw)
                 {
-                    var rot = Quaternion.FromToRotation(Vector2.up, n.Rect.center - node.Rect.center);
-                    var arrowPos = (node.Rect.center + n.Rect.center) / 2 + (node.Rect.center - n.Rect.center) / 5 - (Vector2)(rot * (arrowSize / 2));
+                    var arrowPos = (node.Rect.center + n.Rect.center) / 2 + (node.Rect.center - n.Rect.center) / 6;
                     var mat = GUI.matrix;
                     //Debug.Log(Quaternion.FromToRotation(Vector2.up, n.Rect.center - node.Rect.center).eulerAngles);
-                    GUIUtility.RotateAroundPivot(rot.eulerAngles.z, arrowPos);
-                    GUI.DrawTexture(new Rect(arrowPos, arrowSize), parentArrow, ScaleMode.StretchToFill);
+                    GUIUtility.RotateAroundPivot(Vector2.SignedAngle(Vector2.right,node.Rect.center - n.Rect.center), arrowPos);
+                    GUI.DrawTexture(new Rect(arrowPos - arrowSize / 2, arrowSize), parentArrow, ScaleMode.StretchToFill);
                     GUI.matrix = mat;
                 }
             }
@@ -292,12 +304,11 @@ namespace Assets.Editor.ResourceMap
 
                 if (draw)
                 {
-                    var rot = Quaternion.FromToRotation(Vector2.up, node.Rect.center - n.Rect.center);
-                    var arrowPos = (node.Rect.center + n.Rect.center) / 2 + (n.Rect.center - node.Rect.center) / 8 - (Vector2)(rot * (arrowSize / 2));
+                    var arrowPos = (node.Rect.center + n.Rect.center) / 2 + (n.Rect.center - node.Rect.center) / 8;
                     var mat = GUI.matrix;
                     //Debug.Log(Quaternion.FromToRotation(Vector2.up, n.Rect.center - node.Rect.center).eulerAngles);
-                    GUIUtility.RotateAroundPivot(rot.eulerAngles.z, arrowPos);
-                    GUI.DrawTexture(new Rect(arrowPos, arrowSize), childrenArrow, ScaleMode.StretchToFill);
+                    GUIUtility.RotateAroundPivot(Vector2.SignedAngle(Vector2.right, n.Rect.center - node.Rect.center), arrowPos);
+                    GUI.DrawTexture(new Rect(arrowPos - arrowSize / 2, arrowSize), childrenArrow, ScaleMode.StretchToFill);
                     GUI.matrix = mat;
                 }
             }

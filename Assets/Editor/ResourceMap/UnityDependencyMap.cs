@@ -6,7 +6,6 @@ namespace Assets.Editor.ResourceMap
 {
     public class UnityDependencyMap : IDependencyMap
     {
-        UnityDependencyInfo UnityDependencyInfo;
 
         public string Name
         {
@@ -28,25 +27,7 @@ namespace Assets.Editor.ResourceMap
         {
             get
             {
-                if(UnityDependencyInfo == null)
-                {
-                    var info = ScriptableObject.CreateInstance<UnityDependencyInfo>();
-                    var script = MonoScript.FromScriptableObject(info);
-                    string path = AssetDatabase.GetAssetPath(script);
-                    var dir = Path.GetDirectoryName(path);
-                    path = Path.Combine(dir, "Config/UnityDependencyInfo.asset");
-                    if(File.Exists(path))
-                    {
-                        UnityDependencyInfo = AssetDatabase.LoadAssetAtPath<UnityDependencyInfo>(path);
-                        Object.DestroyImmediate(info);
-                    }
-                    else
-                    {
-                        AssetDatabase.CreateAsset(info, path);
-                        UnityDependencyInfo = info;
-                    }
-                }
-                return UnityDependencyInfo;
+                return UnityDependencyInfo.inst;
             }
         }
 

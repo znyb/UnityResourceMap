@@ -30,6 +30,8 @@ namespace Assets.Editor.ResourceMap
 
         public abstract List<string> GetParent(string path);
 
+        public abstract void Clear();
+
         public abstract void Load();
 
         public virtual void OnAfterDeserialize()

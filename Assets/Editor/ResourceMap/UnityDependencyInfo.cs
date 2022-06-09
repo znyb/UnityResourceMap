@@ -9,6 +9,33 @@ namespace Assets.Editor.ResourceMap
     [PreferBinarySerialization]
     public class UnityDependencyInfo : ResourceDependencyInfo
     {
+        public static UnityDependencyInfo _inst;
+        public static UnityDependencyInfo inst
+        {
+            get
+            {
+                if (_inst == null)
+                {
+                    var info = CreateInstance<UnityDependencyInfo>();
+                    var script = MonoScript.FromScriptableObject(info);
+                    string path = AssetDatabase.GetAssetPath(script);
+                    var dir = Path.GetDirectoryName(path);
+                    path = Path.Combine(dir, "Config/UnityDependencyInfo.asset");
+                    if (File.Exists(path))
+                    {
+                        _inst = AssetDatabase.LoadAssetAtPath<UnityDependencyInfo>(path);
+                        DestroyImmediate(info);
+                    }
+                    else
+                    {
+                        AssetDatabase.CreateAsset(info, path);
+                        _inst = info;
+                    }
+                }
+                return _inst;
+            }
+        }
+
         public override List<string> GetChildren(string path)
         {
             if (Childrens.ContainsKey(path))
@@ -22,6 +49,16 @@ namespace Assets.Editor.ResourceMap
                 return Parents[path];
             return new List<string>();
         }
+
+        public override void Clear()
+        {
+            Childrens.Clear();
+            Parents.Clear();
+            LastUpdateTimes.Clear();
+            EditorUtility.SetDirty(this);
+            AssetDatabase.SaveAssets();
+        }
+
 
         public override void Load()
         {
@@ -48,6 +85,8 @@ namespace Assets.Editor.ResourceMap
                     {
                         if (Childrens.ContainsKey(p))
                             Childrens[p].Remove(path);
+
+                        LastUpdateTimes.Remove(p);
                     }
                     Parents.Remove(path);
                 }
