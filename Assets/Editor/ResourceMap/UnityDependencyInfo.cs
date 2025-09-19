@@ -54,7 +54,7 @@ namespace Assets.Editor.ResourceMap
         {
             Childrens.Clear();
             Parents.Clear();
-            LastUpdateTimes.Clear();
+            DependencyHashDict.Clear();
             EditorUtility.SetDirty(this);
             AssetDatabase.SaveAssets();
         }
@@ -65,7 +65,7 @@ namespace Assets.Editor.ResourceMap
             EditorUtility.DisplayCancelableProgressBar("Hold on", "", 0);
             AssetDatabase.SaveAssets();
             string[] allAsset = AssetDatabase.GetAllAssetPaths();
-            HashSet<string> removedPaths = new HashSet<string>(LastUpdateTimes.Keys);
+            HashSet<string> removedPaths = new HashSet<string>(DependencyHashDict.Keys);
             removedPaths.ExceptWith(allAsset);
             Debug.Log(removedPaths.Count);
             foreach (var path in removedPaths)
@@ -86,11 +86,11 @@ namespace Assets.Editor.ResourceMap
                         if (Childrens.ContainsKey(p))
                             Childrens[p].Remove(path);
 
-                        LastUpdateTimes.Remove(p);
+                        DependencyHashDict.Remove(p);
                     }
                     Parents.Remove(path);
                 }
-                LastUpdateTimes.Remove(path);
+                DependencyHashDict.Remove(path);
             }
             int count = allAsset.Length;
             for (int i = 0; i < count; i++)
@@ -104,8 +104,8 @@ namespace Assets.Editor.ResourceMap
                     }
                 }
                 string p = allAsset[i];
-                var time = File.GetLastWriteTime(p);
-                if (!LastUpdateTimes.ContainsKey(p) || LastUpdateTimes[p] < time)
+                var hash = AssetDatabase.GetAssetDependencyHash(p);
+                if (!DependencyHashDict.ContainsKey(p) || DependencyHashDict[p] != hash)
                 {
                     if(Childrens.ContainsKey(p))
                     {
@@ -128,7 +128,7 @@ namespace Assets.Editor.ResourceMap
                         Parents[d].Remove(p);
                         Parents[d].Add(p);
                     }
-                    LastUpdateTimes[p] = time;
+                    DependencyHashDict[p] = hash;
                 }
             }
             EditorUtility.SetDirty(this);

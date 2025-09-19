@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityEditor;
 
 namespace Assets.Editor.ResourceMap
 {
@@ -11,7 +12,7 @@ namespace Assets.Editor.ResourceMap
     {
         public Dictionary<string, UStringList> Childrens = new Dictionary<string, UStringList>();
         public Dictionary<string, UStringList> Parents = new Dictionary<string, UStringList>();
-        public Dictionary<string, DateTime> LastUpdateTimes = new Dictionary<string, DateTime>();
+        public Dictionary<string, Hash128> DependencyHashDict = new Dictionary<string, Hash128>();
 
         [SerializeField]
         protected List<int> ChildrenPaths = new List<int>();
@@ -24,7 +25,7 @@ namespace Assets.Editor.ResourceMap
         [SerializeField]
         protected List<string> Paths = new List<string>();
         [SerializeField]
-        protected List<long> UpdateTimes = new List<long>();
+        protected List<string> DependencyHashs = new List<string>();
 
         public abstract List<string> GetChildren(string path);
 
@@ -40,13 +41,13 @@ namespace Assets.Editor.ResourceMap
             //Debug.LogError("OnAfterDeserialize Childrens.Count:" + ChildrenPaths.Count);
             Childrens.Clear();
             Parents.Clear();
-            LastUpdateTimes.Clear();
+            DependencyHashDict.Clear();
             Dictionary<int, string> dict = new Dictionary<int, string>();
-            int pathCount = UpdateTimes.Count;
+            int pathCount = DependencyHashs.Count;
             for (int i = 0; i < pathCount; i++)
             {
                 dict.Add(i, Paths[i]);
-                LastUpdateTimes.Add(Paths[i], new DateTime(UpdateTimes[i]));
+                DependencyHashDict.Add(Paths[i], Hash128.Parse(DependencyHashs[i]));
             }
             int childrenCount = ChildrenPaths.Count;
             int index = 0;
@@ -81,13 +82,13 @@ namespace Assets.Editor.ResourceMap
             ParentPaths.Clear();
             ParentDepends.Clear();
             Paths.Clear();
-            UpdateTimes.Clear();
-            Dictionary<string, int> dict = new Dictionary<string, int>(UpdateTimes.Count);
+            DependencyHashs.Clear();
+            Dictionary<string, int> dict = new Dictionary<string, int>(DependencyHashs.Count);
             int i = 0;
-            foreach (var pair in LastUpdateTimes)
+            foreach (var pair in DependencyHashDict)
             {
                 Paths.Add(pair.Key);
-                UpdateTimes.Add(pair.Value.Ticks);
+                DependencyHashs.Add(pair.Value.ToString());
                 dict.Add(pair.Key, i);
                 i++;
             }

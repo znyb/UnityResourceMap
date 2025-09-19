@@ -109,14 +109,19 @@ namespace Assets.Editor.ResourceMap
                 Refresh();
         }
 
+        private void OnFocus()
+        {
+            OnSelectionChange();
+        }
+
         public void OnGUI()
         {
-            if (currentNode == null)
-                return;
-
             DrawGrid();
 
             DrawToolBar();
+
+            if (currentNode == null)
+                return;
 
             CreateMap();
 
@@ -346,6 +351,9 @@ namespace Assets.Editor.ResourceMap
         void Refresh()
         {
             if (string.IsNullOrEmpty(currentPath))
+                return;
+
+            if (Map == null)
                 return;
 
             currentNode = new MapNode();
